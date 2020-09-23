@@ -1,15 +1,27 @@
 import React from 'react'
-import { Box, Button, Heading, Icon, Stack } from '@chakra-ui/core'
+import {
+	Box,
+	Button,
+	FormControl,
+	FormLabel,
+	Heading,
+	Icon,
+	Input,
+	Stack,
+} from '@chakra-ui/core'
 import { useForm } from 'react-hook-form'
 import HookForm from './HookForm'
 import ListInputField from './fields/ListInputField'
 
 type FormValues = {
 	docIds: string[]
+	numDocs: string
 }
 
 function App() {
-	const methods = useForm<FormValues>()
+	const methods = useForm<FormValues>({
+		defaultValues: { numDocs: '0' },
+	})
 
 	async function onSubmit(values: FormValues) {
 		await new Promise((resolve) => setTimeout(resolve, 500))
@@ -32,9 +44,20 @@ function App() {
 			</Heading>
 
 			<HookForm methods={methods} onSubmit={onSubmit}>
-				<Stack spacing={4} mb={4}>
+				<Stack spacing={5} mb={4}>
 					<ListInputField
-						control={methods.control}
+						control={{
+							...methods.control,
+							setValue(name, value, options) {
+								if (name === 'docIds' && value) {
+									methods.setValue(
+										'numDocs',
+										Array.isArray(value) ? String(value.length) : '0',
+									)
+								}
+								return methods.control.setValue(name, value, options)
+							},
+						}}
 						name="docIds"
 						label="ID документов"
 						rules={{
@@ -48,7 +71,22 @@ function App() {
 							},
 						}}
 					/>
+					<FormControl mt={5}>
+						<FormLabel>Количество</FormLabel>
+						<Input ref={methods.register()} aria-label="Количество" name="numDocs" />
+					</FormControl>
 				</Stack>
+
+				<Button
+					marginLeft="auto"
+					mr={4}
+					onClick={() => {
+						methods.setValue('docIds', ['1', '2', '3'])
+					}}
+				>
+					Autofill
+				</Button>
+
 				<Button
 					type="submit"
 					marginLeft="auto"
